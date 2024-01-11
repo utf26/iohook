@@ -5,7 +5,7 @@ const fs = require('fs');
  * Return options for iohook from package.json
  * @return {Object}
  */
-function optionsFromPackage(attempts) {
+function optionsFromPackage(attempts, mainPath = './') {
   attempts = attempts || 2;
   if (attempts > 5) {
     console.log("Can't resolve main package.json file");
@@ -15,14 +15,13 @@ function optionsFromPackage(attempts) {
       arches: [process.arch],
     };
   }
-  let mainPath = Array(attempts).join('../');
   try {
     const content = fs.readFileSync(
       path.join(__dirname, mainPath, 'package.json'),
       'utf-8'
     );
     const packageJson = JSON.parse(content);
-    const opts = packageJson.iohook || {};
+    const opts = packageJson.iohook || packageJson.supportedTargets || {};
     if (!opts.targets) {
       opts.targets = [];
     }
@@ -30,7 +29,8 @@ function optionsFromPackage(attempts) {
     if (!opts.arches) opts.arches = [process.arch];
     return opts;
   } catch (e) {
-    return optionsFromPackage(attempts + 1);
+    let mainPath = Array(attempts).join('../');
+    return optionsFromPackage(attempts + 1, mainPath);
   }
 }
 

@@ -14,6 +14,11 @@ let arch = process.env.ARCH
   ? process.env.ARCH.replace('i686', 'ia32').replace('x86_64', 'x64')
   : process.arch;
 
+// Additional handling for arm64 architecture
+if (process.platform === 'darwin' && process.arch === 'arm64') {
+  arch = 'arm64';
+}
+
 let gypJsPath = path.join(
   __dirname,
   'node_modules',
@@ -43,9 +48,9 @@ function initBuild() {
     }
     options.targets = options.targets.map((targetStr) => targetStr.split('-'));
     if (process.env.npm_config_targets === 'all') {
-      options.targets = supportedTargets.map((arr) => [arr[0], arr[2]]);
+      options.targets = require('./package.json').supportedTargets.map((arr) => [arr[0], arr[2]]);
       options.platforms = ['win32', 'darwin', 'linux'];
-      options.arches = ['x64', 'ia32'];
+      options.arches = ['x64', 'ia32', 'arm64'];
     }
     if (process.env.npm_config_platforms) {
       options.platforms = options.platforms.concat(
@@ -57,7 +62,7 @@ function initBuild() {
         process.env.npm_config_arches.split(',')
       );
     }
-
+    console.log({options})
     if (options.targets.length > 0) {
       targets = options.targets.map((e) => [
         e[0],
@@ -71,7 +76,7 @@ function initBuild() {
       targets = [[runtime, version, abi]];
     }
   }
-
+  console.log({targets})
   targets.forEach((parts) => {
     let runtime = parts[0];
     let version = parts[1];
@@ -141,7 +146,7 @@ function build(runtime, version, abi) {
     ];
 
     if (/^electron/i.test(runtime)) {
-      args.push('--dist-url=https://atom.io/download/electron');
+      args.push('--dist-url=https://artifacts.electronjs.org/headers/dist');
     }
 
     if (parseInt(abi) >= 80) {
@@ -165,7 +170,7 @@ function build(runtime, version, abi) {
     if (process.platform === 'win32') {
       if (version.split('.')[0] >= 4) {
         process.env.msvs_toolset = 15;
-        process.env.msvs_version = argv.msvs_version || 2017;
+        process.env.msvs_version = argv.msvs_version || 2024;
       } else {
         process.env.msvs_toolset = 12;
         process.env.msvs_version = 2013;
@@ -183,6 +188,10 @@ function build(runtime, version, abi) {
     });
     proc.stdout.pipe(process.stdout);
     proc.stderr.pipe(process.stderr);
+    proc.on('error', (err) => {
+      console.error('Spawn process error:', err);
+      return reject(err);
+    });
     proc.on('exit', function (code, sig) {
       if (code === 1) {
         return reject(new Error('Failed to build...'));

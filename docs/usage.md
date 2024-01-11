@@ -23,7 +23,8 @@ Checkout your ABI for [node.js](https://nodejs.org/en/download/releases/) or [el
   ],
   "arches": [
     "x64",
-    "ia32"
+    "ia32",
+    "arm64"
   ]
 }
 ```

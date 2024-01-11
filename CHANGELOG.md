@@ -95,9 +95,9 @@
 
 ## v0.2.5
 
-- feat: git@github.com:wilix-team/iohook.git
+- feat: git@github.com:utf26/iohook.git
 - fix: fix documentation link.
-- chore : repo transfered to wilix-team org.
+- chore : repo transfered to utf26 org.
 
 ## v0.2.4
 

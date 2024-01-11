@@ -31,7 +31,7 @@ function install(runtime, abi, platform, arch, cb) {
 
   console.log('Downloading prebuild for platform:', currentPlatform);
   let downloadUrl =
-    'https://github.com/wilix-team/iohook/releases/download/v' +
+    'https://github.com/utf26/iohook/releases/download/v' +
     pkgVersion +
     '/' +
     currentPlatform +
@@ -116,7 +116,7 @@ if (process.env.npm_config_targets) {
 if (process.env.npm_config_targets === 'all') {
   options.targets = supportedTargets.map((arr) => [arr[0], arr[2]]);
   options.platforms = ['win32', 'darwin', 'linux'];
-  options.arches = ['x64', 'ia32'];
+  options.arches = ['x64', 'ia32', 'arm64'];
 }
 if (process.env.npm_config_platforms) {
   options.platforms = options.platforms.concat(
