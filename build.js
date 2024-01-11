@@ -16,7 +16,7 @@ let arch = process.env.ARCH
 
 // Additional handling for arm64 architecture
 if (process.platform === 'darwin' && process.arch === 'arm64') {
-  arch = 'arm64';
+  arch = 'x64';
 }
 
 let gypJsPath = path.join(

@@ -156,6 +156,9 @@ if (options.targets.length > 0) {
         if (platform === 'darwin' && arch === 'ia32') {
           return;
         }
+        if (platform === 'darwin' && arch === 'arm64') {
+          arch = 'x64';
+        }
         chain = chain.then(function () {
           return new Promise(function (resolve) {
             console.log(runtime, abi, platform, arch);
