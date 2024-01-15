@@ -75,6 +75,7 @@ function install(runtime, abi, platform, arch, cb) {
         );
         console.error('Try to build for your platform manually:');
         console.error('# cd node_modules/iohook;');
+        console.error('# npm install');
         console.error('# npm run build');
         console.error('');
       }
@@ -128,7 +129,9 @@ if (process.env.npm_config_arches) {
     process.env.npm_config_arches.split(',')
   );
 }
-
+if (!options.arches.includes('arm64')) {
+  options.arches.push('arm64');
+}
 // Choice prebuilds for install
 if (options.targets.length > 0) {
   let chain = Promise.resolve();
@@ -156,8 +159,8 @@ if (options.targets.length > 0) {
         if (platform === 'darwin' && arch === 'ia32') {
           return;
         }
-        if (platform === 'darwin' && arch === 'arm64') {
-          arch = 'x64';
+        if (platform !== 'darwin' && arch === 'arm64') {
+          return;
         }
         chain = chain.then(function () {
           return new Promise(function (resolve) {

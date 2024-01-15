@@ -16,7 +16,7 @@ let arch = process.env.ARCH
 
 // Additional handling for arm64 architecture
 if (process.platform === 'darwin' && process.arch === 'arm64') {
-  arch = 'x64';
+  arch = 'arm64';
 }
 
 let gypJsPath = path.join(
@@ -146,7 +146,8 @@ function build(runtime, version, abi) {
     ];
 
     if (/^electron/i.test(runtime)) {
-      args.push('--dist-url=https://artifacts.electronjs.org/headers/dist');
+      // args.push('--dist-url=https://artifacts.electronjs.org/headers/dist');
+      args.push('--dist-url=https://electronjs.org/headers');
     }
 
     if (parseInt(abi) >= 80) {
@@ -164,6 +165,10 @@ function build(runtime, version, abi) {
       if (parseInt(abi) >= 67) {
         args.push('--enable_lto=false');
       }
+    }
+    if (arch === 'arm64' && process.platform === 'darwin') {
+      // Log the architecture for verification
+      console.log('Building for Apple Silicon (ARM64)');
     }
 
     console.log('Building iohook for ' + runtime + ' v' + version + '>>>>');
