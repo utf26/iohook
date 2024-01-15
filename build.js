@@ -146,8 +146,7 @@ function build(runtime, version, abi) {
     ];
 
     if (/^electron/i.test(runtime)) {
-      // args.push('--dist-url=https://artifacts.electronjs.org/headers/dist');
-      args.push('--dist-url=https://electronjs.org/headers');
+      args.push('--dist-url=https://artifacts.electronjs.org/headers/dist');
     }
 
     if (parseInt(abi) >= 80) {
