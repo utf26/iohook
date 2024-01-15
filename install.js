@@ -79,6 +79,7 @@ function install(runtime, abi, platform, arch, cb) {
         console.error('# npm run build');
         console.error('');
       }
+      return;
     }
 
     let options = {
@@ -117,7 +118,7 @@ if (process.env.npm_config_targets) {
 if (process.env.npm_config_targets === 'all') {
   options.targets = supportedTargets.map((arr) => [arr[0], arr[2]]);
   options.platforms = ['win32', 'darwin', 'linux'];
-  options.arches = ['x64', 'ia32', 'arm64'];
+  options.arches = ['x64', 'ia32'];
 }
 if (process.env.npm_config_platforms) {
   options.platforms = options.platforms.concat(
@@ -129,9 +130,7 @@ if (process.env.npm_config_arches) {
     process.env.npm_config_arches.split(',')
   );
 }
-if (!options.arches.includes('arm64')) {
-  options.arches.push('arm64');
-}
+
 // Choice prebuilds for install
 if (options.targets.length > 0) {
   let chain = Promise.resolve();

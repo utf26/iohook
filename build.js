@@ -14,10 +14,10 @@ let arch = process.env.ARCH
   ? process.env.ARCH.replace('i686', 'ia32').replace('x86_64', 'x64')
   : process.arch;
 
-// Additional handling for arm64 architecture
-if (process.platform === 'darwin' && process.arch === 'arm64') {
-  arch = 'arm64';
-}
+// // Additional handling for arm64 architecture
+// if (process.platform === 'darwin' && process.arch === 'arm64') {
+//   arch = 'arm64';
+// }
 
 let gypJsPath = path.join(
   __dirname,
@@ -46,11 +46,12 @@ function initBuild() {
         process.env.npm_config_targets.split(',')
       );
     }
+    console.log(options.targets);
     options.targets = options.targets.map((targetStr) => targetStr.split('-'));
     if (process.env.npm_config_targets === 'all') {
       options.targets = require('./package.json').supportedTargets.map((arr) => [arr[0], arr[2]]);
       options.platforms = ['win32', 'darwin', 'linux'];
-      options.arches = ['x64', 'ia32', 'arm64'];
+      options.arches = ['x64', 'ia32'];
     }
     if (process.env.npm_config_platforms) {
       options.platforms = options.platforms.concat(
@@ -83,9 +84,11 @@ function initBuild() {
     let abi = parts[2];
     chain = chain
       .then(function () {
+        console.log(runtime, version, abi);
         return build(runtime, version, abi);
       })
       .then(function () {
+        cpBuilds(runtime, abi);
         return tarGz(runtime, abi);
       })
       .catch((err) => {
@@ -104,6 +107,56 @@ function initBuild() {
   });
 
   cpGyp();
+}
+
+function cpBuilds(runtime, abi) {
+  let buildsPath =  path.join(__dirname, 'builds', runtime +
+      '-v' +
+      abi +
+      '-' +
+      process.platform +
+      '-' +
+      arch,
+      'build',
+      'Release'
+  );
+  try {
+    fs.unlinkSync(path.join(buildsPath, 'iohook.node'));
+  } catch (e) {}
+
+  fs.copySync(
+      path.join(__dirname, 'build', 'Release', 'iohook.node'),
+      path.join(buildsPath, 'iohook.node')
+  );
+  switch (process.platform) {
+    case 'win32':
+      try {
+        fs.unlinkSync(path.join(buildsPath, 'uiohook.dll'));
+      } catch (e) {}
+      fs.copySync(
+          path.join(__dirname, 'build', 'Release', 'uiohook.dll'),
+          path.join(buildsPath, 'uiohook.dll')
+      );
+      break;
+    case 'darwin':
+      try {
+        fs.unlinkSync(path.join(buildsPath, 'uiohook.dylib'));
+      } catch (e) {}
+      fs.copySync(
+          path.join(__dirname, 'build', 'Release', 'uiohook.dylib'),
+          path.join(buildsPath, 'uiohook.dylib')
+      );
+      break;
+    default:
+      try {
+        fs.unlinkSync(path.join(buildsPath, 'uiohook.so'));
+      } catch (e) {}
+      fs.copySync(
+          path.join(__dirname, 'build', 'Release', 'uiohook.so'),
+          path.join(buildsPath, 'uiohook.so')
+      );
+      break;
+  }
 }
 
 function cpGyp() {
@@ -145,6 +198,8 @@ function build(runtime, version, abi) {
       '--arch=' + arch,
     ];
 
+    console.log("runtime", runtime, version, arch, abi);
+
     if (/^electron/i.test(runtime)) {
       args.push('--dist-url=https://artifacts.electronjs.org/headers/dist');
     }
@@ -164,6 +219,10 @@ function build(runtime, version, abi) {
       if (parseInt(abi) >= 67) {
         args.push('--enable_lto=false');
       }
+    } else {
+      if (parseInt(abi) >= 64 && parseInt(abi) < 121) {
+        args.push('--build_v8_with_gn=false');
+      }
     }
     if (arch === 'arm64' && process.platform === 'darwin') {
       // Log the architecture for verification
@@ -176,8 +235,8 @@ function build(runtime, version, abi) {
         process.env.msvs_toolset = 15;
         process.env.msvs_version = argv.msvs_version || 2024;
       } else {
-        process.env.msvs_toolset = 12;
-        process.env.msvs_version = 2013;
+        process.env.msvs_toolset = 15;
+        process.env.msvs_version = 2024;
       }
       args.push('--msvs_version=' + process.env.msvs_version);
     } else {
